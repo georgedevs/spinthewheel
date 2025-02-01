@@ -1,21 +1,23 @@
-// hooks/useWindowSize.ts
 'use client';
 
 import { useState, useEffect } from 'react';
 
 interface WindowSize {
-  width: number;
-  height: number;
+  width: number | undefined;
+  height: number | undefined;
 }
 
 export function useWindowSize() {
+  // Initialize state with undefined to indicate loading
   const [windowSize, setWindowSize] = useState<WindowSize>({
-    width: 0,
-    height: 0,
+    width: undefined,
+    height: undefined,
   });
 
   useEffect(() => {
+    // Handler to call on window resize
     function handleResize() {
+      // Set window width/height to state
       setWindowSize({
         width: window.innerWidth,
         height: window.innerHeight,

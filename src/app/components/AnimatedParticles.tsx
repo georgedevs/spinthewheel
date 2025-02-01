@@ -1,15 +1,25 @@
-// components/AnimatedParticles.tsx
 'use client';
 
 import { motion } from "framer-motion";
 import { useWindowSize } from "../hooks/useWindowSize";
+import { useEffect, useState } from "react";
 
 export const AnimatedParticles = () => {
-  const { width = 0, height = 0 } = useWindowSize();
+  const windowSize = useWindowSize();
+  const [isMounted, setIsMounted] = useState(false);
 
-  if (width === 0 || height === 0) {
-    return null; // Don't render particles until we have window dimensions
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Don't render anything on the server or until mounted on client
+  if (!isMounted || typeof windowSize.width === 'undefined' || typeof windowSize.height === 'undefined') {
+    return null;
   }
+
+  // Now TypeScript knows windowSize.width and height are defined
+  const width = windowSize.width;
+  const height = windowSize.height;
 
   return (
     <div className="absolute inset-0 overflow-hidden">

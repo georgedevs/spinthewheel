@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from "framer-motion";
 ;
 // import { PrizeWinModal } from '@/components/prize-win-modal';
@@ -10,17 +10,24 @@ import { AnimatedParticles } from './components/AnimatedParticles';
 import { PrizeWinModal } from './components/PrizeWinModal';
 import { TestModeBanner } from './components/TestModeBanner';
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export const dynamic = "force-dynamic";
+export const runtime = "edge";
+export const preferredRegion = "auto";
+export const revalidate = 0;
 
 const TEST_CODES = ['TEST123', 'DEMO456', 'SPIN789'];
 
 export default function Home() {
+  const [isMounted, setIsMounted] = useState(false);
   const [ticketCode, setTicketCode] = useState('');
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [winningPrize, setWinningPrize] = useState<string | null>(null);
   const [isTestMode, setIsTestMode] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleVerifyTicket = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +55,20 @@ export default function Home() {
       setError('Something went wrong. Please try again.');
     }
   };
+
+  if (!isMounted) {
+    return (
+      <main className="min-h-screen relative overflow-hidden bg-gray-900">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-900 via-primary-900/10 to-gray-900" />
+        <section className="relative container mx-auto px-4 pt-8 pb-8 md:pt-12">
+          <h1 className="text-center text-4xl md:text-5xl lg:text-6xl pb-4 font-montserrat font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-accent-400">
+            Spin & Win Big!
+          </h1>
+        </section>
+      </main>
+    );
+  }
+
 
   return (
     <main className="min-h-screen relative overflow-hidden bg-gray-900">
