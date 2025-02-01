@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // for migrations and other direct db operations
+}
+
+model Ticket {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  hasSpun   Boolean  @default(false)
+  spinResult String? // The prize won, if any
+  spinNumber Int?    // Which spin number this was (1-256000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Prize {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "₦1,000,000", "Phone", etc.
+  totalCount  Int      // Total number available
+  remaining   Int      // Number remaining
+  rangeStart  Int      // Start of the player range
+  rangeEnd    Int      // End of the player range
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SpinCount {
+  id          String   @id @default(cuid())
+  totalSpins  Int      @default(0)
+  millionWon  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

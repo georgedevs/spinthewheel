@@ -1,101 +1,134 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import { motion } from "framer-motion";
+;
+// import { PrizeWinModal } from '@/components/prize-win-modal';
+import { AnimatedHeading } from './components/animated-heading';
+import { SpinWheel } from './components/spin-wheel';
+import { AnimatedParticles } from './components/AnimatedParticles';
+import { PrizeWinModal } from './components/PrizeWinModal';
+import { TestModeBanner } from './components/TestModeBanner';
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+const TEST_CODES = ['TEST123', 'DEMO456', 'SPIN789'];
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [ticketCode, setTicketCode] = useState('');
+  const [isVerified, setIsVerified] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [winningPrize, setWinningPrize] = useState<string | null>(null);
+  const [isTestMode, setIsTestMode] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const handleVerifyTicket = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      // Check if it's a test code
+      const isTestCode = TEST_CODES.includes(ticketCode);
+      setIsTestMode(isTestCode);
+
+      const response = await fetch('/api/verify-ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketCode })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error);
+        return;
+      }
+
+      setIsVerified(true);
+      setError(null);
+    } catch (err) {
+      setError('Something went wrong. Please try again.');
+    }
+  };
+
+  return (
+    <main className="min-h-screen relative overflow-hidden bg-gray-900">
+
+      {/* Test mode banner */}
+      {isTestMode && isVerified && <TestModeBanner code={ticketCode} />}
+
+      {/* Background gradient */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-900 via-primary-900/10 to-gray-900" />
+      
+      {/* Animated background particles */}
+  <AnimatedParticles/>
+
+      {/* Hero Section */}
+      <section className="relative container mx-auto px-4 pt-8 pb-8 md:pt-12">
+        <AnimatedHeading className="text-center text-4xl md:text-5xl lg:text-6xl pb-4">
+          Spin & Win Big!
+        </AnimatedHeading>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <h2 className="text-2xl md:text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-accent-400 mb-2">
+            Stand a Chance to Win ₦1,000,000
+          </h2>
+          <p className="text-gray-300 text-lg">
+            Enter your ticket code to spin the wheel and win amazing prizes!
+          </p>
+        </motion.div>
+
+        {!isVerified ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-md mx-auto"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+            <form onSubmit={handleVerifyTicket} className="space-y-4">
+              <input
+                type="text"
+                value={ticketCode}
+                onChange={(e) => setTicketCode(e.target.value)}
+                placeholder="Enter your ticket code"
+                className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+              {error && (
+                <p className="text-red-500 text-sm">{error}</p>
+              )}
+              <button
+                type="submit"
+                className="w-full group relative inline-flex items-center justify-center rounded-full bg-gradient-to-r from-primary-500 to-accent-500 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+              >
+                Verify Ticket
+              </button>
+            </form>
+          </motion.div>
+        ) : (
+          <div className="flex flex-col items-center justify-center">
+            <SpinWheel 
+              ticketCode={ticketCode}
+              onSpinComplete={(prize) => setWinningPrize(prize)}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          </div>
+        )}
+      </section>
+
+   {/* Terms and conditions */}
+<footer className="relative container mx-auto px-4 py-6 md:py-8 text-center">
+  <p className="text-sm md:text-base font-semibold text-gray-400/90 tracking-wide">
+    Terms and conditions apply. One spin per ticket. Prizes subject to availability.
+  </p>
+</footer>
+
+      {winningPrize && (
+  <PrizeWinModal
+    isOpen={!!winningPrize}
+    closeModal={() => setWinningPrize(null)}
+    prize={winningPrize}
+  />
+)}
+    </main>
   );
 }
