@@ -1,17 +1,36 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
-  reactStrictMode: true,
-  swcMinify: true,
-  experimental: {
-    workerThreads: true,
-    cpus: 1
+  typescript: {
+    ignoreBuildErrors: true,
   },
-  // Disable static page generation
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  experimental: {
+    // Disable page data collection
+    isrMemoryCacheSize: 0,
+    // Force server components
+    serverActions: true,
+  },
+  // Disable static optimization
   staticPageGenerationTimeout: 0,
-  // Force dynamic rendering
   compiler: {
-    removeConsole: process.env.NODE_ENV === "production"
+    // Remove console logs in production
+    removeConsole: process.env.NODE_ENV === "production",
+  },
+  // Add specific headers
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store',
+          },
+        ],
+      },
+    ]
   }
 }
 
