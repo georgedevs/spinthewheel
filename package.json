@@ -11,7 +11,7 @@
     "db:studio": "prisma studio",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
-    "reset-db": "ts-node scripts/resetDatabase.ts"
+    "reset-db": "node scripts/resetDatabase.js"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
@@ -28,7 +28,8 @@
     "react": "^19.0.0",
     "react-custom-roulette": "^1.4.1",
     "react-dom": "^19.0.0",
-    "tailwind-merge": "^3.0.1"
+    "tailwind-merge": "^3.0.1",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

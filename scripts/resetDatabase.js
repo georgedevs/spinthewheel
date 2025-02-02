@@ -1,6 +1,5 @@
-// scripts/resetDatabase.ts
-
-import { PrismaClient } from '@prisma/client';
+// scripts/resetDatabase.js
+const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
@@ -25,8 +24,10 @@ async function resetDatabase() {
 
     console.log('SpinCount reinitialized');
     console.log('Database reset completed successfully!');
+
   } catch (error) {
     console.error('Error resetting database:', error);
+    process.exit(1);
   } finally {
     await prisma.$disconnect();
   }
