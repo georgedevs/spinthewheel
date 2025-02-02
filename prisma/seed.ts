@@ -87,7 +87,13 @@ async function main() {
   }
 
   // Create test tickets
-  const testCodes = ['TEST123', 'DEMO456', 'SPIN789'];
+  const testCodes = [
+    'TEST123', 'DEMO456', 'SPIN789', 
+    'BETA001', 'BETA002', 'BETA003', 'BETA004', 'BETA005',
+    'TESTER01', 'TESTER02', 'TESTER03', 'TESTER04', 'TESTER05',
+    'QA0001', 'QA0002', 'QA0003', 'QA0004', 'QA0005',
+    'TRIAL01', 'TRIAL02', 'TRIAL03', 'TRIAL04', 'TRIAL05',
+  ];
   for (const code of testCodes) {
     await prisma.ticket.create({
       data: {
