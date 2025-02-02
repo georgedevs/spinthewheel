@@ -13,7 +13,6 @@ import { TestModeBanner } from './components/TestModeBanner';
 export const dynamic = "force-dynamic";
 export const runtime = "edge";
 export const preferredRegion = "auto";
-export const revalidate = 0;
 
 const TEST_CODES = ['TEST123', 'DEMO456', 'SPIN789'];
 
