@@ -130,6 +130,8 @@ export default function Home() {
             <SpinWheel 
               ticketCode={ticketCode}
               onSpinComplete={(prize) => setWinningPrize(prize)}
+
+
             />
           </div>
         )}
