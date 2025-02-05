@@ -2,7 +2,7 @@
 
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, useEffect, useState } from 'react';
-import { PartyPopper, Frown } from 'lucide-react';
+import { PartyPopper, Frown, RotateCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
@@ -50,6 +50,12 @@ export const PrizeWinModal = ({
     }
     return () => setShouldPlayConfetti(false);
   }, [isOpen, prize]);
+
+  const handleTryAgain = () => {
+    // Close modal and reload page
+    closeModal();
+    window.location.reload();
+  };
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -142,13 +148,23 @@ export const PrizeWinModal = ({
                     </div>
                   )}
 
-                  <div className="flex justify-center">
+                  <div className="flex flex-col gap-4">
                     <button
                       onClick={closeModal}
                       className="group relative inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-500 to-accent-500 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-gray-900"
                     >
                       {prize === 'Try Again' ? 'Close' : 'Amazing!'}
                     </button>
+
+                    {prize === 'Try Again' && (
+                      <button
+                        onClick={handleTryAgain}
+                        className="group relative inline-flex items-center justify-center gap-2 rounded-full bg-gray-800 hover:bg-gray-700 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                      >
+                        <RotateCw className="w-5 h-5" />
+                        Try With Another Ticket
+                      </button>
+                    )}
                   </div>
                 </div>
               </Dialog.Panel>
