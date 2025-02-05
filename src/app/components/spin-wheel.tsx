@@ -20,9 +20,9 @@ export const SpinWheel = ({ ticketCode, onSpinComplete }: SpinWheelProps) => {
     { option: '₦20,000', style: { backgroundColor: '#5B21B6', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
     { option: 'Phone', style: { backgroundColor: '#4338CA', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
     { option: 'Try Again', style: { backgroundColor: '#5B21B6', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
-    { option: 'Hoodie', style: { backgroundColor: '#4338CA', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
+    { option: 'Artifact Hoodie', style: { backgroundColor: '#4338CA', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
     { option: '₦50,000', style: { backgroundColor: '#5B21B6', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
-    { option: 'Premiere', style: { backgroundColor: '#4338CA', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
+    { option: 'Premiere Invite', style: { backgroundColor: '#4338CA', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
     { option: 'Try Again', style: { backgroundColor: '#5B21B6', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
     { option: '₦100,000', style: { backgroundColor: '#4338CA', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
     { option: 'Try Again', style: { backgroundColor: '#5B21B6', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
@@ -36,16 +36,16 @@ export const SpinWheel = ({ ticketCode, onSpinComplete }: SpinWheelProps) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ticketCode })
         });
-
+  
         const result = await response.json();
-
+  
         if (!response.ok) {
           setError(result.error);
           return;
         }
-
-        // Find the index of the prize in our data array
-        const prizeIndex = data.findIndex(item => item.option.includes(result.prize.replace('₦', '')));
+  
+        // Find exact match instead of partial match
+        const prizeIndex = data.findIndex(item => item.option === result.prize);
         if (prizeIndex === -1) {
           // If prize not found, default to "Try Again"
           const tryAgainIndex = data.findIndex(item => item.option === 'Try Again');
@@ -53,7 +53,7 @@ export const SpinWheel = ({ ticketCode, onSpinComplete }: SpinWheelProps) => {
         } else {
           setPrizeNumber(prizeIndex);
         }
-
+  
         setMustSpin(true);
         setHasSpun(true);
       } catch (err) {
@@ -61,7 +61,6 @@ export const SpinWheel = ({ ticketCode, onSpinComplete }: SpinWheelProps) => {
       }
     }
   };
-
   return (
     <motion.div 
       className="relative"

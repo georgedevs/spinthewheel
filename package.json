@@ -11,8 +11,7 @@
     "db:studio": "prisma studio",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
-    "reset-db": "node scripts/resetDatabase.js",
-     "simulate": "node scripts/simulateSpins.js"
+    "reset-db": "node scripts/resetDatabase.js"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
