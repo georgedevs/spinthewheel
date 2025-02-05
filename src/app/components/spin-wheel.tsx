@@ -20,9 +20,9 @@ export const SpinWheel = ({ ticketCode, onSpinComplete }: SpinWheelProps) => {
     { option: '₦20,000', style: { backgroundColor: '#5B21B6', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
     { option: 'Phone', style: { backgroundColor: '#4338CA', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
     { option: 'Try Again', style: { backgroundColor: '#5B21B6', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
-    { option: 'Artifact Hoodie', style: { backgroundColor: '#4338CA', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
+    { option: 'Artifact Hoodie', style: { backgroundColor: '#4338CA', textColor: 'white', fontSize: 15, fontWeight: 'bold' } },
     { option: '₦50,000', style: { backgroundColor: '#5B21B6', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
-    { option: 'Premiere Invite', style: { backgroundColor: '#4338CA', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
+    { option: 'Premiere Invite', style: { backgroundColor: '#4338CA', textColor: 'white', fontSize: 15, fontWeight: 'bold' } },
     { option: 'Try Again', style: { backgroundColor: '#5B21B6', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
     { option: '₦100,000', style: { backgroundColor: '#4338CA', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
     { option: 'Try Again', style: { backgroundColor: '#5B21B6', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
@@ -92,7 +92,7 @@ export const SpinWheel = ({ ticketCode, onSpinComplete }: SpinWheelProps) => {
           radiusLineColor="#0EA5E9"
           radiusLineWidth={2}
           spinDuration={0.8}
-          textDistance={75} // Adjusted to move text closer to the edge
+          textDistance={70} // Adjusted to move text closer to the edge
         />
         
         {/* Larger pointer */}
