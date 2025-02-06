@@ -10,11 +10,15 @@ interface WinningTicket {
   spinResult: string;
   spinNumber: number;
   createdAt: string;
+  isMillionContestant: boolean; 
 }
 
 interface SpinStats {
   totalSpins: number;
-  millionWon: boolean;
+  millionContestants: number;
+  rangeMillionCounts: {
+    [key: string]: number;
+  };
   remainingSpins: number;
 }
 
@@ -201,10 +205,18 @@ export default function AdminPage() {
                 transition={{ delay: 0.2 }}
                 className="bg-gray-800 rounded-lg p-6"
               >
-                <h2 className="text-xl mb-2">₦1,000,000 Prize</h2>
-                <p className="text-3xl font-bold text-primary-500">
-                  {stats?.millionWon ? 'Won' : 'Not Won'}
-                </p>
+               <h2 className="text-xl mb-2">₦1,000,000 Contestants</h2>
+  <p className="text-3xl font-bold text-primary-500">
+    {stats?.millionContestants}/16
+  </p>
+  <div className="mt-2 text-sm text-gray-400">
+    {Object.entries(stats?.rangeMillionCounts || {}).map(([range, count]) => (
+      <div key={range} className="flex justify-between">
+        <span>Range {range}:</span>
+        <span>{count}/{range.startsWith('1-') ? '4' : '2'}</span>
+      </div>
+    ))}
+  </div>
               </motion.div>
             </div>
 
@@ -217,32 +229,38 @@ export default function AdminPage() {
             >
               <h2 className="text-2xl font-bold mb-4">Winning Tickets</h2>
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-700">
-                      <th className="text-left py-3 px-4">Ticket Code</th>
-                      <th className="text-left py-3 px-4">Prize Won</th>
-                      <th className="text-left py-3 px-4">Spin Number</th>
-                      <th className="text-left py-3 px-4">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {winningTickets.map((ticket) => (
-                      <tr key={ticket.code} className="border-b border-gray-700">
-                        <td className="py-3 px-4">{ticket.code}</td>
-                        <td className="py-3 px-4">
-                          <span className={ticket.spinResult === '₦1,000,000' ? 'text-yellow-500 font-bold' : ''}>
-                            {ticket.spinResult}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">{ticket.spinNumber}</td>
-                        <td className="py-3 px-4">
-                          {new Date(ticket.createdAt).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <table className="w-full">
+  <thead>
+    <tr className="border-b border-gray-700">
+      <th className="text-left py-3 px-4">Ticket Code</th>
+      <th className="text-left py-3 px-4">Prize Won</th>
+      <th className="text-left py-3 px-4">Million Contestant</th>
+      <th className="text-left py-3 px-4">Spin Number</th>
+      <th className="text-left py-3 px-4">Date</th>
+    </tr>
+  </thead>
+  <tbody>
+    {winningTickets.map((ticket) => (
+      <tr key={ticket.code} className="border-b border-gray-700">
+        <td className="py-3 px-4">{ticket.code}</td>
+        <td className="py-3 px-4">
+          <span className={ticket.spinResult === '₦1,000,000' ? 'text-yellow-500 font-bold' : ''}>
+            {ticket.spinResult}
+          </span>
+        </td>
+        <td className="py-3 px-4">
+          {ticket.isMillionContestant && (
+            <span className="text-yellow-500">Contestant</span>
+          )}
+        </td>
+        <td className="py-3 px-4">{ticket.spinNumber}</td>
+        <td className="py-3 px-4">
+          {new Date(ticket.createdAt).toLocaleDateString()}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
               </div>
             </motion.div>
           </div>

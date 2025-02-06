@@ -15,6 +15,7 @@ model Ticket {
   hasSpun   Boolean  @default(false)
   spinResult String? // The prize won, if any
   spinNumber Int?    // Which spin number this was (1-256000)
+   isMillionContestant Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -33,7 +34,8 @@ model Prize {
 model SpinCount {
   id          String   @id @default(cuid())
   totalSpins  Int      @default(0)
-  millionWon  Boolean  @default(false)
+  millionContestants Int @default(0)  // Track total contestants selected
+  rangeMillionCounts Json    // Track contestants per range
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

@@ -1,11 +1,19 @@
 import { prisma } from "../lib/prisma";
 
-
 interface PrizeRange {
   start: number;
   end: number;
   gifts: number;
   probability: number;
+}
+
+interface SpinCountType {
+  id: string;
+  totalSpins: number;
+  millionContestants: number;
+  rangeMillionCounts: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const PRIZE_RANGES: PrizeRange[] = [
@@ -19,7 +27,6 @@ const PRIZE_RANGES: PrizeRange[] = [
 ];
 
 const PRIZES = [
-  { name: '₦1,000,000', isSpecial: true },
   { name: '₦20,000', isSpecial: false },
   { name: 'Phone', isSpecial: false },
   { name: 'Artifact Hoodie', isSpecial: false },
@@ -28,17 +35,46 @@ const PRIZES = [
   { name: '₦100,000', isSpecial: false },
 ];
 
-export async function determineSpinResult(spinNumber: number): Promise<string> {
+export async function determineSpinResult(spinNumber: number): Promise<{prize: string; isMillionContestant: boolean}> {
   try {
-    // Get current spin count and million naira status
-    const spinCount = await prisma.spinCount.findFirst();
+    // Get current spin count and million contestant status
+    const spinCount = (await prisma.spinCount.findFirst()) as SpinCountType;
     if (!spinCount) throw new Error('Spin count not initialized');
+    const rangeMillionCounts = JSON.parse(spinCount.rangeMillionCounts);
 
     // Find the current range
     const currentRange = PRIZE_RANGES.find(
       range => spinNumber >= range.start && spinNumber <= range.end
     );
-    if (!currentRange) return 'Try Again';
+    if (!currentRange) return { prize: 'Try Again', isMillionContestant: false };
+
+    // Check if we can still select million naira contestants for this range
+    const rangeKey = `${currentRange.start}-${currentRange.end}`;
+    const maxContestants = currentRange.start === 1 ? 4 : 2;
+    const currentContestants = rangeMillionCounts[rangeKey];
+
+    // Calculate million naira probability
+    let millionProbability = 0;
+    if (currentContestants < maxContestants && spinCount.millionContestants < 16) {
+      const remainingSpinsInRange = currentRange.end - spinNumber + 1;
+      const remainingContestants = maxContestants - currentContestants;
+      millionProbability = remainingContestants / remainingSpinsInRange;
+    }
+
+    // Determine if this spin selects a million naira contestant
+    const isMillionContestant = Math.random() < millionProbability;
+    if (isMillionContestant) {
+      // Update contestant counts
+      rangeMillionCounts[rangeKey]++;
+      await prisma.spinCount.update({
+        where: { id: spinCount.id },
+        data: {
+          millionContestants: spinCount.millionContestants + 1,
+          rangeMillionCounts: JSON.stringify(rangeMillionCounts)
+        }
+      });
+      return { prize: '₦1,000,000', isMillionContestant: true };
+    }
 
     // Get remaining gifts for this range
     const remainingGifts = await prisma.prize.findMany({
@@ -49,22 +85,19 @@ export async function determineSpinResult(spinNumber: number): Promise<string> {
     });
 
     // If no gifts remaining in this range, return try again
-    if (remainingGifts.length === 0) return 'Try Again';
+    if (remainingGifts.length === 0) return { prize: 'Try Again', isMillionContestant: false };
 
     // Determine if this spin should win based on probability
     const willWin = Math.random() < currentRange.probability;
-    if (!willWin) return 'Try Again';
+    if (!willWin) return { prize: 'Try Again', isMillionContestant: false };
 
     // If winning, select a prize
     const availablePrizes = PRIZES.filter(prize => {
-      // Filter out million if already won
-      if (prize.isSpecial && spinCount.millionWon) return false;
-      
       // Check if prize is still available in remainingGifts
       return remainingGifts.some(g => g.name === prize.name);
     });
 
-    if (availablePrizes.length === 0) return 'Try Again';
+    if (availablePrizes.length === 0) return { prize: 'Try Again', isMillionContestant: false };
 
     // Randomly select from available prizes
     const selectedPrize = availablePrizes[Math.floor(Math.random() * availablePrizes.length)];
@@ -75,17 +108,9 @@ export async function determineSpinResult(spinNumber: number): Promise<string> {
       data: { remaining: { decrement: 1 } }
     });
 
-    // If million naira won, update status
-    if (selectedPrize.name === '₦1,000,000') {
-      await prisma.spinCount.update({
-        where: { id: spinCount.id },
-        data: { millionWon: true }
-      });
-    }
-
-    return selectedPrize.name;
+    return { prize: selectedPrize.name, isMillionContestant: false };
   } catch (error) {
     console.error('Error determining spin result:', error);
-    return 'Try Again';
+    return { prize: 'Try Again', isMillionContestant: false };
   }
 }

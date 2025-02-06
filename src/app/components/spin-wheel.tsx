@@ -4,9 +4,14 @@ import React, { useState } from 'react';
 import { Wheel } from 'react-custom-roulette';
 import { motion } from 'framer-motion';
 
+interface SpinResult {
+  prize: string;
+  isMillionContestant: boolean;
+}
+
 interface SpinWheelProps {
   ticketCode: string;
-  onSpinComplete: (prize: string) => void;
+  onSpinComplete: (prize: string, isMillionContestant: boolean) => void;
 }
 
 export const SpinWheel = ({ ticketCode, onSpinComplete }: SpinWheelProps) => {
@@ -14,6 +19,7 @@ export const SpinWheel = ({ ticketCode, onSpinComplete }: SpinWheelProps) => {
   const [prizeNumber, setPrizeNumber] = useState(0);
   const [hasSpun, setHasSpun] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [spinResult, setSpinResult] = useState<SpinResult | null>(null);
 
   const data = [
     { option: '₦1,000,000', style: { backgroundColor: '#4338CA', textColor: 'white', fontSize: 20, fontWeight: 'bold' } },
@@ -36,24 +42,26 @@ export const SpinWheel = ({ ticketCode, onSpinComplete }: SpinWheelProps) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ticketCode })
         });
-  
+
         const result = await response.json();
-  
+
         if (!response.ok) {
           setError(result.error);
           return;
         }
-  
-        // Find exact match instead of partial match
+
         const prizeIndex = data.findIndex(item => item.option === result.prize);
         if (prizeIndex === -1) {
-          // If prize not found, default to "Try Again"
           const tryAgainIndex = data.findIndex(item => item.option === 'Try Again');
           setPrizeNumber(tryAgainIndex);
         } else {
           setPrizeNumber(prizeIndex);
         }
-  
+
+        setSpinResult({
+          prize: result.prize,
+          isMillionContestant: result.isMillionContestant
+        });
         setMustSpin(true);
         setHasSpun(true);
       } catch (err) {
@@ -61,6 +69,7 @@ export const SpinWheel = ({ ticketCode, onSpinComplete }: SpinWheelProps) => {
       }
     }
   };
+
   return (
     <motion.div 
       className="relative"
@@ -68,9 +77,7 @@ export const SpinWheel = ({ ticketCode, onSpinComplete }: SpinWheelProps) => {
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Larger wheel container */}
       <div className="relative w-[340px] h-[340px] md:w-[500px] md:h-[500px]">
-        {/* Glowing background for emphasis */}
         <div className="absolute inset-0 bg-gradient-to-r from-primary-500/20 to-accent-500/20 rounded-full blur-xl" />
         
         <Wheel
@@ -79,11 +86,13 @@ export const SpinWheel = ({ ticketCode, onSpinComplete }: SpinWheelProps) => {
           data={data}
           onStopSpinning={() => {
             setMustSpin(false);
-            onSpinComplete(data[prizeNumber].option);
+            if (spinResult) {
+              onSpinComplete(spinResult.prize, spinResult.isMillionContestant);
+            }
           }}
           backgroundColors={['#4338CA', '#5B21B6']}
           textColors={['white']}
-          fontSize={22} // Increased font size
+          fontSize={22}
           outerBorderColor="#C026D3"
           outerBorderWidth={4}
           innerRadius={0}
@@ -92,10 +101,9 @@ export const SpinWheel = ({ ticketCode, onSpinComplete }: SpinWheelProps) => {
           radiusLineColor="#0EA5E9"
           radiusLineWidth={2}
           spinDuration={0.8}
-          textDistance={70} // Adjusted to move text closer to the edge
+          textDistance={70}
         />
         
-        {/* Larger pointer */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-6 w-12 h-12">
           <div className="w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[30px] border-accent-500 drop-shadow-lg"></div>
         </div>

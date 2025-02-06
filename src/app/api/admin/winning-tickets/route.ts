@@ -6,10 +6,17 @@ export async function GET() {
   try {
     const winningTickets = await prisma.ticket.findMany({
       where: {
-        hasSpun: true,
-        spinResult: {
-          not: 'Try Again'
-        }
+        OR: [
+          {
+            hasSpun: true,
+            spinResult: {
+              not: 'Try Again'
+            }
+          },
+          {
+            isMillionContestant: true
+          }
+        ]
       },
       orderBy: {
         createdAt: 'desc'
@@ -18,7 +25,8 @@ export async function GET() {
         code: true,
         spinResult: true,
         spinNumber: true,
-        createdAt: true
+        createdAt: true,
+        isMillionContestant: true  // Added this
       }
     });
 
@@ -31,5 +39,4 @@ export async function GET() {
     );
   }
 }
-
 

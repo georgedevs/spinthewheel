@@ -4,19 +4,18 @@ import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 import { determineSpinResult } from '../../../../utils/prizeUtils';
 
-
 const TEST_CODES = ['TEST123', 'DEMO456', 'SPIN789'];
 
-// Define all possible prizes and their test probabilities
-const PRIZE_DISTRIBUTION = [
-  { prize: '₦1,000,000', probability: 0.01 },    // 1% chance
-  { prize: '₦100,000', probability: 0.04 },      // 4% chance
-  { prize: '₦50,000', probability: 0.05 },       // 5% chance
-  { prize: '₦20,000', probability: 0.05 },       // 5% chance
-  { prize: 'Phone', probability: 0.05 },         // 5% chance
-  { prize: 'Artifact Hoodie', probability: 0.05 }, // 5% chance
-  { prize: 'Premiere Invite', probability: 0.05 }, // 5% chance
-  { prize: 'Try Again', probability: 0.70 }      // 70% chance
+// Define test prize distribution with million contestant probability
+const TEST_PRIZE_DISTRIBUTION = [
+  { prize: '₦1,000,000', isMillionContestant: true, probability: 0.01 },  // 1% chance
+  { prize: '₦100,000', isMillionContestant: false, probability: 0.04 },   // 4% chance
+  { prize: '₦50,000', isMillionContestant: false, probability: 0.05 },    // 5% chance
+  { prize: '₦20,000', isMillionContestant: false, probability: 0.05 },    // 5% chance
+  { prize: 'Phone', isMillionContestant: false, probability: 0.05 },      // 5% chance
+  { prize: 'Artifact Hoodie', isMillionContestant: false, probability: 0.05 }, // 5% chance
+  { prize: 'Premiere Invite', isMillionContestant: false, probability: 0.05 }, // 5% chance
+  { prize: 'Try Again', isMillionContestant: false, probability: 0.70 }   // 70% chance
 ] as const;
 
 export async function POST(request: Request) {
@@ -36,13 +35,14 @@ export async function POST(request: Request) {
       let cumulativeProbability = 0;
       
       // Find the prize based on cumulative probability
-      const prize = PRIZE_DISTRIBUTION.find(({ probability }) => {
+      const result = TEST_PRIZE_DISTRIBUTION.find(({ probability }) => {
         cumulativeProbability += probability;
         return random < cumulativeProbability;
-      })?.prize || 'Try Again';
+      }) || { prize: 'Try Again', isMillionContestant: false, probability: 0 };
 
       return NextResponse.json({ 
-        prize,
+        prize: result.prize,
+        isMillionContestant: result.isMillionContestant,
         spinNumber: Math.floor(Math.random() * 1000),
         test: true
       });
@@ -74,7 +74,9 @@ export async function POST(request: Request) {
       }
 
       const newSpinNumber = spinCount.totalSpins + 1;
-      const prize = await determineSpinResult(newSpinNumber);
+      
+      // Determine prize and million contestant status
+      const spinResult = await determineSpinResult(newSpinNumber);
 
       // Update ticket and spin count atomically
       await Promise.all([
@@ -82,8 +84,9 @@ export async function POST(request: Request) {
           where: { code: ticketCode },
           data: {
             hasSpun: true,
-            spinResult: prize,
+            spinResult: spinResult.prize,
             spinNumber: newSpinNumber,
+            isMillionContestant: spinResult.isMillionContestant
           },
         }),
         tx.spinCount.update({
@@ -93,7 +96,8 @@ export async function POST(request: Request) {
       ]);
 
       return { 
-        prize, 
+        prize: spinResult.prize,
+        isMillionContestant: spinResult.isMillionContestant,
         spinNumber: newSpinNumber,
         remainingSpins: 256000 - newSpinNumber 
       };

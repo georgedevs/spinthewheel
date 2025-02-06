@@ -10,12 +10,14 @@ interface PrizeWinModalProps {
   isOpen: boolean;
   closeModal: () => void;
   prize: string;
+  isMillionContestant?: boolean;
 }
 
 export const PrizeWinModal = ({
   isOpen,
   closeModal,
   prize,
+  isMillionContestant
 }: PrizeWinModalProps) => {
   const [shouldPlayConfetti, setShouldPlayConfetti] = useState(false);
 
@@ -140,13 +142,19 @@ export const PrizeWinModal = ({
                     )}
                   </motion.div>
 
-                  {prize !== 'Try Again' && (
-                    <div className="bg-gray-800/50 rounded-lg p-4 mb-6">
-                      <p className="text-sm text-center text-gray-300">
-                        Save your ticket code! Our team will contact you with details on how to claim your prize.
-                      </p>
-                    </div>
-                  )}
+                  {isMillionContestant ? (
+        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-6">
+          <p className="text-yellow-400 text-sm text-center">
+            Congratulations! You are one of 16 contestants that stand a chance to win ₦1,000,000! Our team will contact you with further details.
+          </p>
+        </div>
+      ) : prize !== 'Try Again' && (
+        <div className="bg-gray-800/50 rounded-lg p-4 mb-6">
+          <p className="text-sm text-center text-gray-300">
+            Save your ticket code! Our team will contact you with details on how to claim your prize.
+          </p>
+        </div>
+      )}
 
                   <div className="flex flex-col gap-4">
                     <button

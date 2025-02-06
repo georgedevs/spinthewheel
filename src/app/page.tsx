@@ -21,7 +21,7 @@ export default function Home() {
   const [ticketCode, setTicketCode] = useState('');
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [winningPrize, setWinningPrize] = useState<string | null>(null);
+  const [winningPrize, setWinningPrize] = useState<{ prize: string; isMillionContestant: boolean } | null>(null);
   const [isTestMode, setIsTestMode] = useState(false);
 
   useEffect(() => {
@@ -127,12 +127,11 @@ export default function Home() {
           </motion.div>
         ) : (
           <div className="flex flex-col items-center justify-center">
-            <SpinWheel 
-              ticketCode={ticketCode}
-              onSpinComplete={(prize) => setWinningPrize(prize)}
+          <SpinWheel 
+  ticketCode={ticketCode}
+  onSpinComplete={(prize, isMillionContestant) => setWinningPrize({ prize, isMillionContestant })}
+/>
 
-
-            />
           </div>
         )}
       </section>
@@ -144,11 +143,12 @@ export default function Home() {
   </p>
 </footer>
 
-      {winningPrize && (
+{winningPrize && (
   <PrizeWinModal
     isOpen={!!winningPrize}
     closeModal={() => setWinningPrize(null)}
-    prize={winningPrize}
+    prize={winningPrize.prize}
+    isMillionContestant={winningPrize.isMillionContestant}
   />
 )}
     </main>

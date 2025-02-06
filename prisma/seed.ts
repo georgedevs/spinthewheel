@@ -18,8 +18,17 @@ async function main() {
   const spinCount = await prisma.spinCount.create({
     data: {
       totalSpins: 0,
-      millionWon: false,
-    },
+      millionContestants: 0,
+      rangeMillionCounts: JSON.stringify({
+        '1-100': 0,      // Max 4
+        '101-1000': 0,   // Max 2
+        '1001-2000': 0,  // Max 2
+        '2001-5000': 0,  // Max 2
+        '5001-10000': 0, // Max 2
+        '10001-50000': 0,// Max 2
+        '50001-256000': 0// Max 2
+      })
+    }
   });
 
   console.log('Initialized spin count:', spinCount);
