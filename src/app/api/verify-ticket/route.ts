@@ -1,84 +1,60 @@
-// app/api/register-ticket/route.ts
+// app/api/verify-ticket/route.ts
 
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 
-
-const API_SECRET_KEY = process.env.API_SECRET_KEY;
+const TEST_CODES = ['TEST123', 'DEMO456', 'SPIN789']; // Add test codes here
 
 export async function POST(request: Request) {
   try {
-    // Verify API key from headers
-    const authHeader = request.headers.get('x-api-key');
-    if (!authHeader || authHeader !== API_SECRET_KEY) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const { ticketCode } = await request.json();
+
+    // Accept test codes in development
+    if (process.env.NODE_ENV === 'development' && TEST_CODES.includes(ticketCode)) {
+      return NextResponse.json({ valid: true });
     }
 
-    // Get ticket data from request body
-    const { tickets } = await request.json();
+    // Normal ticket verification logic
+    const ticket = await prisma.ticket.findUnique({
+      where: { code: ticketCode },
+    });
 
-    // Validate request body
-    if (!tickets || !Array.isArray(tickets)) {
+    if (!ticket) {
       return NextResponse.json(
-        { error: 'Invalid request body. Expected array of ticket codes.' },
+        { error: 'Invalid ticket code' },
         { status: 400 }
       );
     }
 
-    // Validate each ticket code
-    for (const code of tickets) {
-      if (typeof code !== 'string' || code.length < 3) {
-        return NextResponse.json(
-          { error: 'Invalid ticket code format' },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Check for duplicate tickets
-    const existingTickets = await prisma.ticket.findMany({
-      where: {
-        code: {
-          in: tickets
-        }
-      },
-      select: {
-        code: true
-      }
-    });
-
-    if (existingTickets.length > 0) {
+    if (ticket.hasSpun) {
       return NextResponse.json(
-        { 
-          error: 'Duplicate tickets found',
-          duplicates: existingTickets.map(t => t.code)
-        },
+        { error: 'Ticket has already been used' },
         { status: 400 }
       );
     }
 
-    // Create tickets in database
-    const createdTickets = await prisma.ticket.createMany({
-      data: tickets.map(code => ({
-        code,
-        hasSpun: false,
-        isMillionContestant: false
-      })),
-      skipDuplicates: true 
-    });
+    // Get current spin count
+    const spinCount = await prisma.spinCount.findFirst();
+    if (!spinCount) {
+      return NextResponse.json(
+        { error: 'System error' },
+        { status: 500 }
+      );
+    }
 
-    return NextResponse.json({
-      success: true,
-      created: createdTickets.count
-    });
+    // Check if we've reached the spin limit
+    if (spinCount.totalSpins >= 256000) {
+      return NextResponse.json(
+        { error: 'Promotion has ended' },
+        { status: 400 }
+      );
+    }
 
+    return NextResponse.json({ valid: true });
   } catch (error) {
-    console.error('Error registering tickets:', error);
+    console.error('Error verifying ticket:', error);
     return NextResponse.json(
-      { error: 'Failed to register tickets' },
+      { error: 'Server error' },
       { status: 500 }
     );
   }
