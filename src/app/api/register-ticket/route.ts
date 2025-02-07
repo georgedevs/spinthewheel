@@ -3,33 +3,32 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 
-
-const API_SECRET_KEY = process.env.API_SECRET_KEY;
+// Secret key for API authentication
+const API_SECRET = process.env.API_SECRET;
 
 export async function POST(request: Request) {
   try {
-    // Verify API key from headers
-    const authHeader = request.headers.get('x-api-key');
-    if (!authHeader || authHeader !== API_SECRET_KEY) {
+    // Verify API secret
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.split(' ')[1] !== API_SECRET) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    // Get ticket data from request body
-    const { tickets } = await request.json();
-
+    const body = await request.json();
+    
     // Validate request body
-    if (!tickets || !Array.isArray(tickets)) {
+    if (!body.tickets || !Array.isArray(body.tickets)) {
       return NextResponse.json(
-        { error: 'Invalid request body. Expected array of ticket codes.' },
+        { error: 'Invalid request. Expected array of ticket codes' },
         { status: 400 }
       );
     }
 
     // Validate each ticket code
-    for (const code of tickets) {
+    for (const code of body.tickets) {
       if (typeof code !== 'string' || code.length < 3) {
         return NextResponse.json(
           { error: 'Invalid ticket code format' },
@@ -42,7 +41,7 @@ export async function POST(request: Request) {
     const existingTickets = await prisma.ticket.findMany({
       where: {
         code: {
-          in: tickets
+          in: body.tickets
         }
       },
       select: {
@@ -61,18 +60,25 @@ export async function POST(request: Request) {
     }
 
     // Create tickets in database
-    const createdTickets = await prisma.ticket.createMany({
-      data: tickets.map(code => ({
-        code,
-        hasSpun: false,
-        isMillionContestant: false
-      })),
-      skipDuplicates: true 
-    });
+    const createdTickets = await prisma.$transaction(
+      body.tickets.map((code: any) => 
+        prisma.ticket.create({
+          data: {
+            code: code,
+            hasSpun: false,
+            isMillionContestant: false
+          }
+        })
+      )
+    );
 
     return NextResponse.json({
       success: true,
-      created: createdTickets.count
+      message: `Successfully registered ${createdTickets.length} tickets`,
+      tickets: createdTickets.map(t => ({
+        code: t.code,
+        spinUrl: `https://wheelspin.vercel.app/?ticket=${t.code}`
+      }))
     });
 
   } catch (error) {

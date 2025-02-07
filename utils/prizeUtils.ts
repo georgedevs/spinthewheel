@@ -37,7 +37,6 @@ const PRIZES = [
 
 export async function determineSpinResult(spinNumber: number): Promise<{prize: string; isMillionContestant: boolean}> {
   try {
-    // Get current spin count and million contestant status
     const spinCount = (await prisma.spinCount.findFirst()) as SpinCountType;
     if (!spinCount) throw new Error('Spin count not initialized');
     const rangeMillionCounts = JSON.parse(spinCount.rangeMillionCounts);
@@ -48,23 +47,41 @@ export async function determineSpinResult(spinNumber: number): Promise<{prize: s
     );
     if (!currentRange) return { prize: 'Try Again', isMillionContestant: false };
 
-    // Check if we can still select million naira contestants for this range
+    // Get current range's stats
     const rangeKey = `${currentRange.start}-${currentRange.end}`;
     const maxContestants = currentRange.start === 1 ? 4 : 2;
     const currentContestants = rangeMillionCounts[rangeKey];
 
-    // Calculate million naira probability
+    // Get remaining gifts for this range
+    const remainingGifts = await prisma.prize.findMany({
+      where: {
+        rangeStart: currentRange.start,
+        remaining: { gt: 0 }
+      }
+    });
+
+    // Calculate total remaining prizes for this range
+    const totalRemainingPrizes = remainingGifts.reduce((sum, gift) => sum + gift.remaining, 0);
+
+    // Calculate remaining spins in this range
+    const remainingSpinsInRange = currentRange.end - spinNumber + 1;
+
+    // Calculate probabilities
     let millionProbability = 0;
+    let regularPrizeProbability = 0;
+
     if (currentContestants < maxContestants && spinCount.millionContestants < 16) {
-      const remainingSpinsInRange = currentRange.end - spinNumber + 1;
       const remainingContestants = maxContestants - currentContestants;
       millionProbability = remainingContestants / remainingSpinsInRange;
     }
 
-    // Determine if this spin selects a million naira contestant
+    if (totalRemainingPrizes > 0) {
+      regularPrizeProbability = totalRemainingPrizes / remainingSpinsInRange;
+    }
+
+    // First check for million contestant
     const isMillionContestant = Math.random() < millionProbability;
     if (isMillionContestant) {
-      // Update contestant counts
       rangeMillionCounts[rangeKey]++;
       await prisma.spinCount.update({
         where: { id: spinCount.id },
@@ -76,39 +93,33 @@ export async function determineSpinResult(spinNumber: number): Promise<{prize: s
       return { prize: '₦1,000,000', isMillionContestant: true };
     }
 
-    // Get remaining gifts for this range
-    const remainingGifts = await prisma.prize.findMany({
-      where: {
-        rangeStart: currentRange.start,
-        remaining: { gt: 0 }
+    // Then check for regular prize
+    const willWin = Math.random() < regularPrizeProbability;
+    if (willWin && remainingGifts.length > 0) {
+      // Select random gift from remaining gifts
+      const availablePrizes = PRIZES.filter(prize => 
+        remainingGifts.some(g => g.name === prize.name)
+      );
+
+      if (availablePrizes.length > 0) {
+        const selectedPrize = availablePrizes[Math.floor(Math.random() * availablePrizes.length)];
+        
+        // Update prize counts
+        await prisma.prize.updateMany({
+          where: { 
+            name: selectedPrize.name, 
+            rangeStart: currentRange.start 
+          },
+          data: { 
+            remaining: { decrement: 1 } 
+          }
+        });
+
+        return { prize: selectedPrize.name, isMillionContestant: false };
       }
-    });
+    }
 
-    // If no gifts remaining in this range, return try again
-    if (remainingGifts.length === 0) return { prize: 'Try Again', isMillionContestant: false };
-
-    // Determine if this spin should win based on probability
-    const willWin = Math.random() < currentRange.probability;
-    if (!willWin) return { prize: 'Try Again', isMillionContestant: false };
-
-    // If winning, select a prize
-    const availablePrizes = PRIZES.filter(prize => {
-      // Check if prize is still available in remainingGifts
-      return remainingGifts.some(g => g.name === prize.name);
-    });
-
-    if (availablePrizes.length === 0) return { prize: 'Try Again', isMillionContestant: false };
-
-    // Randomly select from available prizes
-    const selectedPrize = availablePrizes[Math.floor(Math.random() * availablePrizes.length)];
-
-    // Update prize counts
-    await prisma.prize.updateMany({
-      where: { name: selectedPrize.name, rangeStart: currentRange.start },
-      data: { remaining: { decrement: 1 } }
-    });
-
-    return { prize: selectedPrize.name, isMillionContestant: false };
+    return { prize: 'Try Again', isMillionContestant: false };
   } catch (error) {
     console.error('Error determining spin result:', error);
     return { prize: 'Try Again', isMillionContestant: false };
