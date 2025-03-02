@@ -1,16 +1,136 @@
 # Wheel Spin Prize System - Technical Documentation
 
 ## Table of Contents
-1. [System Overview](#system-overview)
-2. [Architecture](#architecture)
-3. [Database Schema](#database-schema)
-4. [Prize Distribution](#prize-distribution)
-5. [Probability Calculations](#probability-calculations)
-6. [API Integration Guide](#api-integration-guide)
-7. [Security Considerations](#security-considerations)
-8. [Simulation Results](#simulation-results)
-9. [Administrative Dashboard](#administrative-dashboard)
-10. [Deployment Information](#deployment-information)
+1. [Local Development Setup](#local-development-setup)
+2. [System Overview](#system-overview)
+3. [Architecture](#architecture)
+4. [Database Schema](#database-schema)
+5. [Prize Distribution](#prize-distribution)
+6. [Probability Calculations](#probability-calculations)
+7. [API Integration Guide](#api-integration-guide)
+8. [Security Considerations](#security-considerations)
+9. [Simulation Results](#simulation-results)
+10. [Administrative Dashboard](#administrative-dashboard)
+11. [Deployment Information](#deployment-information)
+
+## Local Development Setup
+
+### Prerequisites
+- Node.js (v18 or higher)
+- PostgreSQL database
+- npm or yarn package manager
+
+### Installation Steps
+* **Clone the repository**
+  ```bash
+  git clone https://github.com/yourusername/wheelspin.git
+  cd wheelspin
+  ```
+
+* **Install dependencies**
+  ```bash
+  npm install
+  # or
+  yarn install
+  ```
+
+* **Set up environment variables**  
+  Create a `.env` file in the root directory with the following variables:
+  ```
+  # Database URLs (Required)
+  DATABASE_URL="postgresql://user:password@localhost:5432/wheelspin"
+  DIRECT_URL="postgresql://user:password@localhost:5432/wheelspin"
+  
+  # API Secret for ticket registration (Required)
+  API_SECRET="your-secret-key"
+  
+  # Admin credentials (Optional - for development)
+  ADMIN_USERNAME="secretadmin"
+  ADMIN_PASSWORD="adminHere"
+  
+  # Development mode (Optional)
+  NODE_ENV="development"
+  ```
+
+* **Initialize the database**
+  ```bash
+  # Generate Prisma client
+  npm run postinstall
+  
+  # Push the database schema
+  npm run db:push
+  
+  # Seed the database with initial data
+  npm run db:seed
+  ```
+
+* **Start the development server**
+  ```bash
+  npm run dev
+  ```
+
+### Testing the Application
+
+* **Use test ticket codes**  
+  The following test codes are available in development mode:
+  ```javascript
+  const testCodes = [
+    'TEST123', 'DEMO456', 'SPIN789', 
+    'BETA001', 'BETA002', 'BETA003', 'BETA004', 'BETA005',
+    'BETA006', 'BETA007', 'BETA008', 'BETA009', 'BETA010',
+    'BETA011', 'BETA012', 'BETA013', 'BETA014', 'BETA015',
+    'BETA016', 'BETA017', 'BETA018', 'BETA019', 'BETA020',
+    'TESTER01', 'TESTER02', 'TESTER03', 'TESTER04', 'TESTER05',
+    'TESTER06', 'TESTER07', 'TESTER08', 'TESTER09', 'TESTER10',
+    'TESTER11', 'TESTER12', 'TESTER13', 'TESTER14', 'TESTER15',
+    'QA0001', 'QA0002', 'QA0003', 'QA0004', 'QA0005',
+    'QA0006', 'QA0007', 'QA0008', 'QA0009', 'QA0010',
+    'QA0011', 'QA0012', 'QA0013', 'QA0014', 'QA0015',
+    'TRIAL01', 'TRIAL02', 'TRIAL03', 'TRIAL04', 'TRIAL05',
+    'TRIAL06', 'TRIAL07', 'TRIAL08', 'TRIAL09', 'TRIAL10',
+    'ERROR01', 'ERROR02', 'ERROR03', 'ERROR04', 'ERROR05',
+    'ERROR06', 'ERROR07', 'ERROR08', 'ERROR09', 'ERROR10',
+    'GEORGE01', 'GEORGE02', 'GEORGE03', 'GEORGE04', 'GEORGE05',
+    'GEORGE06', 'GEORGE07', 'GEORGE08', 'GEORGE09', 'GEORGE15',
+    'GEORGE10', 'GEORGE11', 'GEORGE12', 'GEORGE13', 'GEORGE14',
+    'ABCD01','ABCD02','ABCD03','ABCD04','ABCD05',
+    'ABCD06','ABCD07','ABCD08','ABCD09','ABCD10',
+    'ABCD11','ABCD12','ABCD13','ABCD14','ABCD15',
+  ];
+  ```
+
+* **Access admin dashboard**  
+  Visit `http://localhost:3000/admin-dash` and use the admin credentials from your `.env` file.
+
+### Database Management
+
+* **View database with Prisma Studio**
+  ```bash
+  npm run db:studio
+  ```
+
+* **Reset database to initial state**
+  ```bash
+  npm run reset-db
+  ```
+
+### Additional Commands
+
+* **Lint code**
+  ```bash
+  npm run lint
+  ```
+
+* **Run tests**
+  ```bash
+  npm test
+  ```
+
+* **Build for production**
+  ```bash
+  npm run build
+  ```
+
 
 ## System Overview
 
